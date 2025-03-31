@@ -1,0 +1,18 @@
+- name: Setup Caddy
+  hosts: all
+  become: true
+  roles:
+    - role: caddy
+  vars:
+    caddy_regular_http_port: 80
+    caddy_routed_http_port: 8080
+    caddy_regular_https_port: 443
+    caddy_routed_https_port: 8443
+    caddy_tls:
+      - tls_server_name: "maproovinkorra.ee"
+        tls_cert: /etc/pki/tls/certs/selfsigned.crt
+        tls_key: /etc/pki/tls/private/selfsigned.key
+
+      - tls_server_name: "test2.bb"
+        tls_cert: /test/cert
+        tls_key: /test/key

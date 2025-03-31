@@ -1,0 +1,45 @@
+{
+        order coraza_waf first
+        auto_https disable_redirects
+}
+:{{ caddy_routed_http_port }} {
+    coraza_waf {
+        load_owasp_crs
+        directives `
+        Include @coraza.conf-recommended
+        Include @crs-setup.conf.example
+        Include @owasp_crs/*.conf
+        SecRuleEngine On
+        `
+    }
+
+    reverse_proxy localhost:{{ caddy_regular_http_port }}
+}
+
+{% for site in caddy_tls %}
+{{ site.tls_server_name }}:{{ caddy_routed_https_port }} {
+    # Local TLS certificate for incoming connections
+    tls {{ site.tls_cert }} {{ site.tls_key }}
+
+    coraza_waf {
+        load_owasp_crs
+        directives `
+            Include @coraza.conf-recommended
+            Include @crs-setup.conf.example
+            Include @owasp_crs/*.conf
+            SecRuleEngine On
+        `
+    }
+
+    reverse_proxy https://localhost:{{ caddy_regular_https_port }} {
+        transport http {
+            tls
+            tls_trusted_ca_certs {{ site.tls_cert }} 
+            tls_server_name {{ site.tls_server_name }}
+        }
+    }
+}
+{% endfor %}
+
+
+

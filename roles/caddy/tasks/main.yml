@@ -1,0 +1,90 @@
+---
+- name: Coppy Caddy static binary to host
+  ansible.builtin.copy:
+    src: caddy_coroza
+    dest: /bin/caddy
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Create systemd service for Caddy
+  ansible.builtin.copy:
+    src: caddy.service
+    dest: /etc/systemd/system/caddy.service
+    mode: "0644"
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Ensure Caddy dir
+  ansible.builtin.file:
+    path: "/etc/caddy/"
+    state: directory
+    mode: "0644"
+    owner: root
+
+- name: Copy base caddyfile with http configuration
+  ansible.builtin.template:
+    src: Caddyfile.j2
+    dest: /etc/caddy/Caddyfile
+    mode: '0644'
+    owner: root
+
+- name: Block direct inbound HTTP traffic on caddy_regular_http_port
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "{{ caddy_regular_http_port }}"
+    jump: DROP
+    state: present
+
+- name: Redirect incoming HTTP traffic to Caddy
+  ansible.builtin.iptables:
+    table: nat
+    chain: PREROUTING
+    protocol: tcp
+    destination_port: "{{ caddy_regular_http_port }}"
+    jump: REDIRECT
+    to_ports: "{{ caddy_routed_http_port }}"
+    state: present
+
+- name: Block direct inbound HTTPS traffic on caddy_regular_https_port
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "{{ caddy_regular_https_port }}"
+    jump: DROP
+    state: present
+
+- name: Redirect incoming HTTPS traffic to Caddy
+  ansible.builtin.iptables:
+    table: nat
+    chain: PREROUTING
+    protocol: tcp
+    destination_port: "{{ caddy_regular_https_port }}"
+    jump: REDIRECT
+    to_ports: "{{ caddy_routed_https_port }}"
+    state: present
+
+- name: Allow inbound traffic on port caddy_routed_http_port
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "{{ caddy_routed_http_port }}"
+    jump: ACCEPT
+    state: present
+
+- name: Allow inbound traffic on port caddy_routed_https_port
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "{{ caddy_routed_https_port }}"
+    jump: ACCEPT
+    state: present
+
+- name: Enable and start Caddy service
+  ansible.builtin.systemd:
+    name: caddy
+    enabled: true
+    state: started
