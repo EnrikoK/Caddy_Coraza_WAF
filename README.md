@@ -59,5 +59,7 @@ caddy_tls:
 ```
 ## NB!
 **The certificates used will have to contain a  Subject Alternative Names (SANs) configuration for Caddy to work!**
+
 **The changes made to iptables will not be saved with the given playbook. Be careful when overwriting firewall configurations!**
+
 **Services like Firewalld can conflict with iptables!**
