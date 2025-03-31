@@ -1,7 +1,7 @@
 ---
 - name: Coppy Caddy static binary to host
   ansible.builtin.copy:
-    src: caddy_coroza
+    src: caddy_coraza
     dest: /bin/caddy
     mode: "0755"
     owner: root
