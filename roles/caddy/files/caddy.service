@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 ExecStart=caddy run --config /etc/caddy/Caddyfile
-ExecReload=caddy reload --config /etc/caddy/Caddyfile
+ExecReload=caddy adapt --config /etc/caddy/Caddyfile
 Restart=on-failure
 User=root
 Group=root
