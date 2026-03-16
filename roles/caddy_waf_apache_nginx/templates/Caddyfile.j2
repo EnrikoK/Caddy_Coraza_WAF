@@ -3,12 +3,12 @@
 #
 
 {
-        order coraza_waf first
-        auto_https disable_redirects
-        log {
-            output {{ caddy_log_output | default(stderr) }}
-            level WARN
-         }
+    order coraza_waf first
+    auto_https disable_redirects
+    log {
+        output {{ caddy_log_output | default("stderr") }}
+        level WARN
+    }
 }
 
 #
