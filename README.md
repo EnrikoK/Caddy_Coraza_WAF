@@ -1,4 +1,4 @@
-# Caddy setup Playbook with Coraza WAF
+# The Shitty Webserver Bandaid WAF
 
 This playbook automates the installation of Caddy that comes with Coraza WAF ruleset.
 The precompiled and statically linked Caddy server binary can be found in `files/caddy_coraza`
@@ -56,6 +56,22 @@ caddy_tls:
     tls_cert: /test/cert.crt
     tls_key: /test/key.key
 
+```
+
+### **`caddy_discover_tls`**
+Enable automatic TLS vhost discovery from nginx/httpd configs (default: `true`).
+When enabled and `caddy_tls` is empty, the role runs the discovery script and uses its output to build
+the HTTPS blocks in the Caddyfile.
+
+### **`caddy_http`**
+Optional list of HTTP virtual hosts. When provided, the HTTP listener will route based on the `Host` header
+before falling back to the default HTTP backend.
+
+Example:
+```yaml
+caddy_http:
+  - server_name: "example.local"
+  - server_name: "www.example.local"
 ```
 ## NB!
 **The certificates used will have to contain a  Subject Alternative Names (SANs) configuration for Caddy to work!**

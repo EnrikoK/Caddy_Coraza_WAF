@@ -1,8 +1,23 @@
+#
+# Global config
+#
+
 {
         order coraza_waf first
+        order rate_limit before coraza_waf
         auto_https disable_redirects
+        log {
+            output {{ caddy_log_output | default(stderr) }}
+            level WARN
+         }
 }
-:{{ caddy_routed_http_port }} {
+
+#
+# HTTP traffic configuration.
+#
+
+{% for site in caddy_http %}
+{{ site.server_name }}:{{ caddy_routed_http_port }} {
     coraza_waf {
         load_owasp_crs
         directives `
@@ -10,11 +25,25 @@
         Include @crs-setup.conf.example
         Include @owasp_crs/*.conf
         SecRuleEngine On
+
+        SecAction "id:900000,phase:1,nolog,pass,t:none,setvar:tx.paranoia_level={{ caddy_paranoia_level | default(3) }}"
+        SecAction "id:900001,phase:1,nolog,pass,t:none,setvar:tx.executing_paranoia_level={{ caddy_paranoia_level | default(3) }}"
+        
+        # Anomaly score thresholds — lower = stricter
+        # Default is 5 inbound / 4 outbound
+        SecAction "id:900110,phase:1,nolog,pass,t:none, setvar:tx.inbound_anomaly_score_threshold={{ caddy_anomaly_threshold_inbound | default(3) }}, setvar:tx.outbound_anomaly_score_threshold={{ caddy_anomaly_threshold_outbound | default(2) }}" 
         `
     }
 
-    reverse_proxy localhost:{{ caddy_regular_http_port }}
+    reverse_proxy localhost:{{ caddy_regular_http_port }} {
+        header_up Host {{ site.server_name }}
+    }
 }
+{% endfor %}
+
+#
+# HTTPS traffic configuration.
+#
 
 {% for site in caddy_tls %}
 {{ site.tls_server_name }}:{{ caddy_routed_https_port }} {
@@ -28,10 +57,18 @@
             Include @crs-setup.conf.example
             Include @owasp_crs/*.conf
             SecRuleEngine On
+
+            SecAction "id:900000,phase:1,nolog,pass,t:none,setvar:tx.paranoia_level={{ caddy_paranoia_level | default(3) }}"
+            SecAction "id:900001,phase:1,nolog,pass,t:none,setvar:tx.executing_paranoia_level={{ caddy_paranoia_level | default(3) }}"
+
+            # Anomaly score thresholds — lower = stricter
+            # Default is 5 inbound / 4 outbound
+            SecAction "id:900110,phase:1,nolog,pass,t:none, setvar:tx.inbound_anomaly_score_threshold={{ caddy_anomaly_threshold_inbound | default(3) }}, setvar:tx.outbound_anomaly_score_threshold={{ caddy_anomaly_threshold_outbound | default(2) }}" 
         `
     }
 
     reverse_proxy https://localhost:{{ caddy_regular_https_port }} {
+        header_up Host {{ site.tls_server_name }}
         transport http {
             tls
             tls_trusted_ca_certs {{ site.tls_cert }} 

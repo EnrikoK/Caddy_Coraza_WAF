@@ -1,0 +1,13 @@
+---
+# Default ports
+caddy_regular_http_port: 80
+caddy_routed_http_port: 8080
+caddy_regular_https_port: 443
+caddy_routed_https_port: 8443
+
+# TLS discovery
+caddy_discover_tls: true
+caddy_tls: []
+
+# HTTP discovery
+caddy_http: []

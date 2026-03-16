@@ -24,20 +24,45 @@
     mode: "0644"
     owner: root
 
+- name: Copy vhost discovery script
+  ansible.builtin.copy:
+    src: discover_vhosts.sh
+    dest: /usr/local/bin/discover_vhosts.sh
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Discover HTTP/TLS vhosts from nginx/httpd
+  ansible.builtin.command: /usr/local/bin/discover_vhosts.sh
+  register: caddy_tls_discovery
+  changed_when: false
+  when: caddy_discover_tls | bool
+
+- name: Parse discovery output
+  ansible.builtin.set_fact:
+    caddy_discovery: "{{ caddy_tls_discovery.stdout | from_yaml }}"
+  when: caddy_discover_tls | bool
+
+- name: Set caddy_tls from discovery when not provided
+  ansible.builtin.set_fact:
+    caddy_tls: "{{ caddy_discovery.caddy_tls | default([]) }}"
+  when:
+    - caddy_discover_tls | bool
+    - (caddy_tls | default([]) | length) == 0
+
+- name: Set caddy_http from discovery when not provided
+  ansible.builtin.set_fact:
+    caddy_http: "{{ caddy_discovery.caddy_http | default([]) }}"
+  when:
+    - caddy_discover_tls | bool
+    - (caddy_http | default([]) | length) == 0
+
 - name: Copy base caddyfile with http configuration
   ansible.builtin.template:
     src: Caddyfile.j2
     dest: /etc/caddy/Caddyfile
     mode: '0644'
     owner: root
-
-- name: Block direct inbound HTTP traffic on caddy_regular_http_port
-  ansible.builtin.iptables:
-    chain: INPUT
-    protocol: tcp
-    destination_port: "{{ caddy_regular_http_port }}"
-    jump: DROP
-    state: present
 
 - name: Redirect incoming HTTP traffic to Caddy
   ansible.builtin.iptables:
@@ -47,14 +72,6 @@
     destination_port: "{{ caddy_regular_http_port }}"
     jump: REDIRECT
     to_ports: "{{ caddy_routed_http_port }}"
-    state: present
-
-- name: Block direct inbound HTTPS traffic on caddy_regular_https_port
-  ansible.builtin.iptables:
-    chain: INPUT
-    protocol: tcp
-    destination_port: "{{ caddy_regular_https_port }}"
-    jump: DROP
     state: present
 
 - name: Redirect incoming HTTPS traffic to Caddy
