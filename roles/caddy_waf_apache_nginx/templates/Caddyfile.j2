@@ -16,7 +16,7 @@
 #
 
 {% for site in caddy_http %}
-{{ site.server_name }}:{{ caddy_routed_http_port }} {
+http://{{ site.server_name }}:{{ caddy_routed_http_port }} {
     coraza_waf {
         load_owasp_crs
         directives `
@@ -45,7 +45,7 @@
 #
 
 {% for site in caddy_tls %}
-{{ site.tls_server_name }}:{{ caddy_routed_https_port }} {
+https://{{ site.tls_server_name }}:{{ caddy_routed_https_port }} {
     # Local TLS certificate for incoming connections
     tls {{ site.tls_cert }} {{ site.tls_key }}
 
