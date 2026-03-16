@@ -1,8 +1,8 @@
-- name: Setup Caddy
-  hosts: all
+- name: Setup Caddy WAF
+  hosts: coroza_waf_apache_nginx
   become: true
   roles:
-    - role: caddy
+    - role: caddy_waf_apache_nginx
   vars:
     caddy_regular_http_port: 80
     caddy_routed_http_port: 8080
@@ -12,7 +12,7 @@
     caddy_paranoia_level: 4 # CRS paranoia level (1-4, higher is stricter)
     caddy_anomaly_threshold_inbound: 3 # Inbound anomaly score threshold (lower is stricter)
     caddy_anomaly_threshold_outbound: 2 # Outbound anomaly score threshold (lower is stricter)
-    caddy_discover_tls: true
+    caddy_discover_vhosts: true
     caddy_tls: []
     # Example manual TLS entries (used only when caddy_discover_tls is false or caddy_tls is non-empty):
     # caddy_tls:

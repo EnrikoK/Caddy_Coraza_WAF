@@ -4,7 +4,6 @@
 
 {
         order coraza_waf first
-        order rate_limit before coraza_waf
         auto_https disable_redirects
         log {
             output {{ caddy_log_output | default(stderr) }}

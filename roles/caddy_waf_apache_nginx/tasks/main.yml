@@ -36,25 +36,25 @@
   ansible.builtin.command: /usr/local/bin/discover_vhosts.sh
   register: caddy_tls_discovery
   changed_when: false
-  when: caddy_discover_tls | bool
+  when: caddy_discover_vhosts | bool
 
 - name: Parse discovery output
   ansible.builtin.set_fact:
     caddy_discovery: "{{ caddy_tls_discovery.stdout | from_yaml }}"
-  when: caddy_discover_tls | bool
+  when: caddy_discover_vhosts | bool
 
 - name: Set caddy_tls from discovery when not provided
   ansible.builtin.set_fact:
     caddy_tls: "{{ caddy_discovery.caddy_tls | default([]) }}"
   when:
-    - caddy_discover_tls | bool
+    - caddy_discover_vhosts | bool
     - (caddy_tls | default([]) | length) == 0
 
 - name: Set caddy_http from discovery when not provided
   ansible.builtin.set_fact:
     caddy_http: "{{ caddy_discovery.caddy_http | default([]) }}"
   when:
-    - caddy_discover_tls | bool
+    - caddy_discover_vhosts | bool
     - (caddy_http | default([]) | length) == 0
 
 - name: Copy base caddyfile with http configuration
