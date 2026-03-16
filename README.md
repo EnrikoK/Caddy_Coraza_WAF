@@ -1,4 +1,4 @@
-# The Shitty Webserver Bandaid WAF (Role: caddy_waf_apache_nginx)
+# Caddy Coraza ruleset WAF
 
 This role automates the installation of Caddy that comes with Coraza WAF ruleset.
 The precompiled and statically linked Caddy server binary is in roles/caddy_waf_apache_nginx/files/caddy_coraza.
