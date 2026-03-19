@@ -39,42 +39,11 @@ The regular HTTPS port used by a web server for secure HTTPS traffic. This port 
 The port to which HTTPS traffic will be routed (default: `8443`).  
 Caddy will handle traffic on this port after it is redirected from `caddy_regular_https_port`.
 
-### **`caddy_tls`**  
-For any HTTPS traffic a configuration needs to be listed with the following properties.
-Keep in mind that any traffic that is incoming from port 443 and is not listed here will be dropped due to the
-iptables rule!
-
-A list of TLS configurations, each containing:
-- **`tls_server_name`**: The server name for which the TLS certificate is configured.
-- **`tls_cert`**: The path to the certificate file.
-- **`tls_key`**: The path to the private key file.
-
-Example of configuration:
-```yaml
-caddy_tls:
-  - tls_server_name: "maproovinkorra.ee"
-    tls_cert: /etc/pki/tls/certs/selfsigned.crt
-    tls_key: /etc/pki/tls/private/selfsigned.key
-  - tls_server_name: "test2.ee"
-    tls_cert: /test/cert.crt
-    tls_key: /test/key.key
-
-```
-
 ### **`caddy_discover_vhosts`**
 Enable automatic HTTP and TLS vhost discovery from nginx/httpd configs (default: `true`).
 When enabled and `caddy_tls`/`caddy_http` are empty, the role runs the discovery script and uses its output
 to build per-host HTTPS and HTTP blocks in the Caddyfile.
 
-### **`caddy_http`**
-Optional list of HTTP virtual hosts. When provided, the HTTP listener will route based on the `Host` header
-before falling back to the default HTTP backend.
-
-Example:
-```yaml
-caddy_http:
-  - server_name: "example.local"
-  - server_name: "www.example.local"
 ```
 ## NB!
 **The certificates used will have to contain a  Subject Alternative Names (SANs) configuration for Caddy to work!**
