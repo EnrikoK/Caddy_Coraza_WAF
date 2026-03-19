@@ -1,0 +1,42 @@
+---
+# Subtask: discover_vhosts.yml
+# Copies and runs the discovery script, parses YAML output, and sets
+# `caddy_tls` and `caddy_http` when they are not provided via inventory/host_vars.
+
+- name: Copy vhost discovery script
+  ansible.builtin.copy:
+    src: discover_vhosts.sh
+    dest: /usr/local/bin/discover_vhosts.sh
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Discover HTTP/TLS vhosts from nginx/httpd
+  ansible.builtin.command: /usr/local/bin/discover_vhosts.sh
+  register: caddy_tls_discovery
+  changed_when: false
+  when: caddy_discover_vhosts | default(true)
+
+- name: Parse discovery output
+  ansible.builtin.set_fact:
+    caddy_discovery: "{{ caddy_tls_discovery.stdout | default('') | from_yaml }}"
+  when: caddy_discover_vhosts | default(true)
+
+- name: Set empty discovery when discovery disabled
+  ansible.builtin.set_fact:
+    caddy_discovery: {}
+  when: not (caddy_discover_vhosts | default(true))
+- name: Set caddy_tls from discovery when not provided
+  ansible.builtin.set_fact:
+    caddy_tls: "{{ caddy_discovery.caddy_tls | default([]) }}"
+  when: (caddy_tls | default([]) | length) == 0
+
+- name: Set caddy_http from discovery when not provided
+  ansible.builtin.set_fact:
+    caddy_http: "{{ caddy_discovery.caddy_http | default([]) }}"
+  when: (caddy_http | default([]) | length) == 0
+
+- name: Remove discovery script
+  ansible.builtin.file:
+    path: /usr/local/bin/discover_vhosts.sh
+    state: absent

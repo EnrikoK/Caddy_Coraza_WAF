@@ -8,17 +8,9 @@
     caddy_routed_http_port: 8080
     caddy_regular_https_port: 443
     caddy_routed_https_port: 8443
-    caddy_log_output: stderr # You can change this to a file path if you want to log to a file instead of stderr.
+    caddy_log_output: /var/log/caddy/caddy.log # You can change this to a file path if you want to log to a file instead of stderr.
     caddy_paranoia_level: 4 # CRS paranoia level (1-4, higher is stricter)
     caddy_anomaly_threshold_inbound: 3 # Inbound anomaly score threshold (lower is stricter)
     caddy_anomaly_threshold_outbound: 2 # Outbound anomaly score threshold (lower is stricter)
     caddy_discover_vhosts: true
     caddy_tls: []
-    # Example manual TLS entries (used only when caddy_discover_tls is false or caddy_tls is non-empty):
-    # caddy_tls:
-    #   - tls_server_name: "example.local"
-    #     tls_cert: /etc/pki/tls/certs/example.local.crt
-    #     tls_key: /etc/pki/tls/private/example.local.key
-    #   - tls_server_name: "www.example.local"
-    #     tls_cert: /etc/pki/tls/certs/example.local.crt
-    #     tls_key: /etc/pki/tls/private/example.local.key

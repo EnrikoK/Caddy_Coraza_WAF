@@ -6,17 +6,17 @@
     order coraza_waf first
     auto_https disable_redirects
     log {
-        output {{ caddy_log_output | default("stderr") }}
+        output file /var/log/caddy/caddy.log
+        format json
         level WARN
+    }
+    storage file_system {
+        root /var/lib/caddy
     }
 }
 
-#
-# HTTP traffic configuration.
-#
-
-{% for site in caddy_http %}
-http://{{ site.server_name }}:{{ caddy_routed_http_port }} {
+{# Reusable WAF snippet for import into site blocks #}
+(waf) {
     coraza_waf {
         load_owasp_crs
         directives `
@@ -31,10 +31,22 @@ http://{{ site.server_name }}:{{ caddy_routed_http_port }} {
         # Anomaly score thresholds — lower = stricter
         # Default is 5 inbound / 4 outbound
         SecAction "id:900110,phase:1,nolog,pass,t:none, setvar:tx.inbound_anomaly_score_threshold={{ caddy_anomaly_threshold_inbound | default(3) }}, setvar:tx.outbound_anomaly_score_threshold={{ caddy_anomaly_threshold_outbound | default(2) }}" 
+        
+        # Block login attempts with Admin1Admin1 credentials
+        SecRule ARGS|REQUEST_BODY "@pm Admin1Admin1" "id:100001,phase:2,deny,status:403,msg:'Blocked login attempt with Admin1Admin1',log"
         `
-    }
 
-    reverse_proxy localhost:{{ caddy_regular_http_port }} {
+    }
+}
+
+#
+# HTTP traffic configuration.
+#
+
+{% for site in caddy_http | default([]) %}
+http://{{ site.server_name }}:{{ site.incoming_port | default(caddy_routed_http_port) }} {
+    import waf
+    reverse_proxy localhost:{{ site.backend_port | default(caddy_regular_http_port) }} {
         header_up Host {{ site.server_name }}
     }
 }
@@ -44,38 +56,22 @@ http://{{ site.server_name }}:{{ caddy_routed_http_port }} {
 # HTTPS traffic configuration.
 #
 
-{% for site in caddy_tls %}
-https://{{ site.tls_server_name }}:{{ caddy_routed_https_port }} {
+{% for site in caddy_tls | default([]) %}
+https://{{ site.tls_server_name }}:{{ site.incoming_port | default(caddy_routed_https_port) }} {
     # Local TLS certificate for incoming connections
+    {% if site.tls_cert is defined and site.tls_key is defined %}
     tls {{ site.tls_cert }} {{ site.tls_key }}
+    {% endif %}
 
-    coraza_waf {
-        load_owasp_crs
-        directives `
-            Include @coraza.conf-recommended
-            Include @crs-setup.conf.example
-            Include @owasp_crs/*.conf
-            SecRuleEngine On
+    import waf
 
-            SecAction "id:900000,phase:1,nolog,pass,t:none,setvar:tx.paranoia_level={{ caddy_paranoia_level | default(3) }}"
-            SecAction "id:900001,phase:1,nolog,pass,t:none,setvar:tx.executing_paranoia_level={{ caddy_paranoia_level | default(3) }}"
-
-            # Anomaly score thresholds — lower = stricter
-            # Default is 5 inbound / 4 outbound
-            SecAction "id:900110,phase:1,nolog,pass,t:none, setvar:tx.inbound_anomaly_score_threshold={{ caddy_anomaly_threshold_inbound | default(3) }}, setvar:tx.outbound_anomaly_score_threshold={{ caddy_anomaly_threshold_outbound | default(2) }}" 
-        `
-    }
-
-    reverse_proxy https://localhost:{{ caddy_regular_https_port }} {
+    reverse_proxy https://localhost:{{ site.backend_port | default(caddy_regular_https_port) }} {
         header_up Host {{ site.tls_server_name }}
         transport http {
             tls
-            tls_trusted_ca_certs {{ site.tls_cert }} 
             tls_server_name {{ site.tls_server_name }}
         }
     }
+    
 }
 {% endfor %}
-
-
-

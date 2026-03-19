@@ -10,9 +10,6 @@ caddy_discover_vhosts: true
 caddy_tls: []
 caddy_http: []
 
-# Logging
-caddy_log_output: stderr
-
 # CRS tuning
 caddy_paranoia_level: 3
 caddy_anomaly_threshold_inbound: 3
