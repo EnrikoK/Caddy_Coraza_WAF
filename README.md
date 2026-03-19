@@ -21,6 +21,15 @@ Example usage lives in `examples/`:
 
 ---
 
+## Building the caddy binary yourself
+
+If you don't want to trust pre built binaries then use the following command to build it with necessary dependencies 
+
+```
+CGO_ENABLED=0 
+xcaddy build --with github.com/corazawaf/coraza-caddy/v2 --with github.com/corazawaf/coraza-coreruleset --output ./caddy-waf
+```
+
 ## Variables
 
 ### **`caddy_regular_http_port`**  
