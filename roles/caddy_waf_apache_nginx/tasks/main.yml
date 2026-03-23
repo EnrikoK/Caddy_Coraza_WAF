@@ -72,6 +72,18 @@
     to_ports: "{{ caddy_routed_http_port }}"
     state: present
 
+- name: Redirect external traffic for custom apps to Caddy WAF
+  ansible.builtin.iptables:
+    table: nat
+    chain: PREROUTING
+    protocol: tcp
+    match: tcp
+    destination_port: "{{ item.app_port }}"
+    jump: REDIRECT
+    to_ports: "{{ item.caddy_port }}"
+    comment: "Redirect port {{ item.app_port }} to Caddy port {{ item.caddy_port }}"
+  loop: "{{ caddy_custom_apps | default([]) }}"
+
 - name: Redirect incoming HTTPS traffic to Caddy
   ansible.builtin.iptables:
     table: nat

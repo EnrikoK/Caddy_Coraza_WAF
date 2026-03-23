@@ -61,6 +61,8 @@ https://{{ site.tls_server_name }}:{{ site.incoming_port | default(caddy_routed_
     # Local TLS certificate for incoming connections
     {% if site.tls_cert is defined and site.tls_key is defined %}
     tls {{ site.tls_cert }} {{ site.tls_key }}
+    {% else %}
+    tls internal
     {% endif %}
 
     import waf
@@ -74,4 +76,19 @@ https://{{ site.tls_server_name }}:{{ site.incoming_port | default(caddy_routed_
     }
     
 }
+{% endfor %}
+
+# 
+# CUSTOM APPS (From host_vars)
+#
+{% for app in caddy_custom_apps | default([]) %}
+
+# Catch-All for Custom Port (HTTP Only)
+:{{ app.caddy_port }} {
+    import waf
+    
+    # Proxy back to the vulnerable app on localhost
+    reverse_proxy localhost:{{ app.app_port }}
+}
+
 {% endfor %}

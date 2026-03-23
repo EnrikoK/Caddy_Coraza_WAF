@@ -1,0 +1,4 @@
+---
+caddy_custom_apps:
+  - app_port: 5000     # The port the vulnerable app is currently running on
+    caddy_port: 15000  # The port Caddy will listen on to intercept the traffic
