@@ -58,4 +58,17 @@ to build per-host HTTPS and HTTP blocks in the Caddyfile.
 **The certificates used will have to contain a  Subject Alternative Names (SANs) configuration for Caddy to work!**
 
 **The changes made to iptables will not be saved with the given playbook. Be careful when overwriting firewall configurations!**
+```
 
+## Host-specific variables and custom apps
+
+You can define host-specific variables by creating one YAML file per host under a `host_vars/` directory (next to your inventory or playbook). Ansible automatically loads the matching `host_vars/<inventory_hostname>.yml` for the host currently being targeted.
+
+Example file (create `examples/host_vars/host_a.yml`):
+
+```
+caddy_custom_apps:
+  - app_port: 5000     # The port the vulnerable app is currently running on
+    caddy_port: 15000  # The port Caddy will listen on to intercept the traffic
+
+```
